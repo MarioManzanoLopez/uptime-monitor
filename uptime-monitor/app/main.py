@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from apscheduler.schedulers.background import BackgroundScheduler
+from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, get_db, Base, SessionLocal
 from app import models
 from app.checker import check_site
@@ -10,11 +11,12 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Uptime Monitor API")
 
-from fastapi.middleware.cors import CORSMiddleware
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://uptime-monitor-frontend-phi.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
