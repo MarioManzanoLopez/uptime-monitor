@@ -29,3 +29,17 @@ def run_check(site_name: str, url: str, db: Session = Depends(get_db)):
     db.refresh(new_check)
 
     return new_check
+
+@app.get("/checks/{site_name}")
+def get_history(site_name: str, db: Session = Depends(get_db)):
+    checks = db.query(models.Check)\
+        .filter(models.Check.site_name == site_name)\
+        .order_by(models.Check.checked_at.desc())\
+        .limit(50)\
+        .all()
+    return checks
+
+@app.get("/sites")
+def get_sites(db: Session = Depends(get_db)):
+    sites = db.query(models.Check.site_name).distinct().all()
+    return [s[0] for s in sites]
