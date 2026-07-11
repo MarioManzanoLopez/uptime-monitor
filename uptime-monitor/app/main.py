@@ -10,6 +10,16 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Uptime Monitor API")
 
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Lista de sitios a monitorear (por ahora fija, luego la hacemos dinámica)
 SITES_TO_MONITOR = [
     {"site_name": "Google", "url": "https://www.google.com"},
