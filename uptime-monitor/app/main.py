@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from app.database import engine, get_db, Base
+from apscheduler.schedulers.background import BackgroundScheduler
+from app.database import engine, get_db, Base, SessionLocal
 from app import models
 from app.checker import check_site
 
@@ -8,6 +9,42 @@ from app.checker import check_site
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Uptime Monitor API")
+
+# Lista de sitios a monitorear (por ahora fija, luego la hacemos dinámica)
+SITES_TO_MONITOR = [
+    {"site_name": "Google", "url": "https://www.google.com"},
+    {"site_name": "GitHub", "url": "https://www.github.com"},
+]
+
+def run_scheduled_checks():
+    db = SessionLocal()
+    try:
+        for site in SITES_TO_MONITOR:
+            result = check_site(site["url"])
+            new_check = models.Check(
+                site_name=site["site_name"],
+                url=site["url"],
+                status=result["status"],
+                status_code=result["status_code"],
+                response_time=result["response_time"]
+            )
+            db.add(new_check)
+        db.commit()
+        print(f"Checks automáticos completados: {len(SITES_TO_MONITOR)} sitios")
+    finally:
+        db.close()
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(run_scheduled_checks, "interval", minutes=5)
+
+@app.on_event("startup")
+def start_scheduler():
+    scheduler.start()
+    run_scheduled_checks()  # corre uno inmediatamente al arrancar
+
+@app.on_event("shutdown")
+def stop_scheduler():
+    scheduler.shutdown()
 
 @app.get("/")
 def root():
