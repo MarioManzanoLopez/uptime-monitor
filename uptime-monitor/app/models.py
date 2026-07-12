@@ -12,3 +12,11 @@ class Check(Base):
     status_code = Column(Integer, nullable=True)
     response_time = Column(Float, nullable=True)
     checked_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Site(Base):
+    __tablename__ = "sites"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True)
+    url = Column(String(255))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
